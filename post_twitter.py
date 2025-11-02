@@ -1,16 +1,15 @@
 import random
 import os
-from twitter_api import get_twitter_client  # ← 追加
+from twitter_api import get_twitter_client
 
 # --- 設定エリア ---
-# 実際の投稿を有効にする場合は True に変更
-ENABLE_TWEET = False
+# GitHub ActionsではSecretsで設定される環境変数を使用
+ENABLE_TWEET = os.getenv("ENABLE_TWEET", "False").lower() == "true"
 
-# データファイルパス
-TWEET_FILE = os.path.join("twitter", "data", "mr_dog_tweets.txt")
-RECENT_FILE = os.path.join("twitter", "data", "recent_ids.txt")
-
-# 直近ツイート数を記録する範囲
+# --- データファイルパス（どこで実行しても安定） ---
+BASE_DIR = os.path.dirname(__file__)
+TWEET_FILE = os.path.join(BASE_DIR, "data", "mr_dog_tweets.txt")
+RECENT_FILE = os.path.join(BASE_DIR, "data", "recent_ids.txt")
 RECENT_LIMIT = 100
 
 
@@ -72,7 +71,6 @@ def main():
     tweet_id, text = select_random_tweet(tweets, recent_ids)
     print(f"[SELECTED] #{tweet_id}: {text}\n")
 
-    # --- 投稿部分 ---
     if ENABLE_TWEET:
         print("[INFO] 実際の投稿を開始します...")
         success = post_tweet(text)
@@ -82,7 +80,6 @@ def main():
         print("[DEBUG] 投稿は無効です。以下の内容がツイートされる想定です:")
         print(text)
 
-    # --- recent_ids更新 ---
     recent_ids.append(tweet_id)
     if len(recent_ids) > RECENT_LIMIT:
         recent_ids = recent_ids[-RECENT_LIMIT:]
